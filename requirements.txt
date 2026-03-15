@@ -1,0 +1,12 @@
+ultralytics
+tensorflow-cpu
+keras-facenet
+opencv-python-headless
+numpy
+fastapi
+uvicorn
+bcrypt
+PyJWT
+python-multipart
+httpx
+gdown

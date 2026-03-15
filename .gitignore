@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Large model/binary files
+yolov8n.pt
+*.h5
+*.pt
+*.pkl
+*.model
+
+# Environment variables
+.env
+*.env
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Sensitive/auth files
+secret_key.txt
+
+# User Uploads
+static/uploads/

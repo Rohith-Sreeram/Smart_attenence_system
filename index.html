@@ -1,0 +1,2492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendanceX - IoT Biometric System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg: #030712;
+            --card: rgba(17, 24, 39, 0.6);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .container {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .glass-card {
+            background: var(--card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+        }
+
+        /* Dashboard & Tabs */
+        .hidden {
+            display: none !important;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        /* Role Selector in Login */
+        .role-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 0.3rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .role-option {
+            flex: 1;
+            padding: 0.6rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .role-option.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-muted);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .status-pill {
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-verified {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-partial {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-absent {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Section Cards */
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .section-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .year-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        .registration-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        #percentageChart {
+            max-height: 250px;
+        }
+
+        .subject-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .subject-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 1.2rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .subject-card h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .subject-card .percent {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .subject-card .details {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .subject-card .details {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #374151;
+            transition: .4s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+        .trash-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: none;
+            padding: 0.4rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .trash-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Status pills for student subject table */
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Stat card for student overall attendance */
+        .stat-card {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .stat-val {
+            font-size: 3rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Live Feed status indicator */
+        .feed-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .feed-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: background 0.3s;
+        }
+
+        .feed-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+        }
+
+        .feed-dot.disconnected {
+            background: var(--danger);
+        }
+
+        .feed-dot.connecting {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo" style="cursor: pointer;" onclick="initApp()">AttendanceX</div>
+        <div id="userInfo" class="hidden" style="display: flex; align-items: center; gap: 1.5rem;">
+            <div id="headerProfile" style="text-align: right; line-height: 1.2;">
+                <div id="headerName" style="font-weight: 600; font-size: 0.9rem; color: white;"></div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                    <span id="headerEmail"></span> • <span id="headerRFID"></span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                    onclick="logout()">Logout</button>
+                <button id="forgetAccountBtn" class="btn btn-outline hidden"
+                    style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--danger); color: var(--danger);"
+                    onclick="forgetAccount()">Forget Account</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Login View -->
+        <div id="loginView" class="glass-card">
+            <h2 id="loginTitle" style="margin-top: 0; margin-bottom: 1.5rem;">Access Portal</h2>
+
+            <div class="role-selector" id="loginRoleSelector">
+                <div class="role-option active" onclick="setLoginRole('faculty')" id="roleFaculty">Faculty</div>
+                <div class="role-option" onclick="setLoginRole('student')" id="roleStudent">Student</div>
+            </div>
+
+            <form id="loginForm">
+                <div id="facultyNameGroup" class="form-group hidden">
+                    <label>Full Name</label>
+                    <input type="text" id="facultyName" placeholder="Dr. Jane Doe">
+                </div>
+                <div class="form-group">
+                    <label id="usernameLabel">Faculty Email</label>
+                    <input type="text" id="username" placeholder="faculty@school.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div id="facultyRFIDGroup" class="form-group hidden">
+                    <label>Faculty RFID ID</label>
+                    <input type="text" id="facultyRfid" placeholder="e.g. RFID_FAC_001">
+                </div>
+                <button type="submit" id="submitBtn" class="btn" style="width: 100%;">Sign In</button>
+            </form>
+            <p id="loginError" style="color: var(--danger); font-size: 0.8rem; margin-top: 1rem;" class="hidden"></p>
+            <div
+                style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <p id="toggleText" style="font-size: 0.9rem; color: var(--text-muted);">Faculty without an account?
+                    <a href="#" onclick="toggleSignup(event)" id="toggleLink"
+                        style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign Up</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Faculty View -->
+        <div id="facultyDashboard" class="hidden">
+            <!-- Faculty Global Nav -->
+            <nav class="nav-tabs" style="margin-bottom: 2rem;">
+                <button id="tab-classes" class="tab-btn active" onclick="showFacultyView('classes')">Classes</button>
+                <button id="tab-timetable" class="tab-btn" onclick="showFacultyView('timetable')">Timetable</button>
+                <button id="tab-liveGlobal" class="tab-btn" onclick="showFacultyView('live')">Live Attendance
+                    Feed</button>
+            </nav>
+
+            <!-- Classes List View -->
+            <div id="sectionsListView">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="margin: 0;">My Classes</h2>
+                    <button class="btn" onclick="showCreateSection()">+ Create Class</button>
+                </div>
+                <div id="sectionsGrid" class="section-grid"></div>
+            </div>
+
+            <!-- Timetable View -->
+            <div id="timetableView" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="margin: 0;">My Timetable</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" onclick="editTimeSlots()">⚙️ Customize Headers</button>
+                        <button class="btn btn-outline" onclick="resetTimeSlots()">🔄 Reset Defaults</button>
+                        <button class="btn btn-outline" onclick="downloadTimetable()">📥 Download PDF</button>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <h3>Add Schedule Entry</h3>
+                    <form id="timetableForm" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Class</label>
+                            <select id="ttSectionSelect" required></select>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Day</label>
+                            <select id="ttDaySelect" required>
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                                <option value="Saturday">Saturday</option>
+                                <option value="Sunday">Sunday</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Start Time</label>
+                            <input type="time" id="ttStartTime" required>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>End Time</label>
+                            <input type="time" id="ttEndTime" required>
+                        </div>
+                        <button type="submit" class="btn">Add to Timetable</button>
+                    </form>
+                </div>
+
+                <div class="glass-card">
+                    <h3>Current Schedule</h3>
+                    <div id="timetableGridContainer" style="overflow-x: auto;">
+                        <!-- Grid dynamically injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Class View -->
+            <div id="createSectionView" class="hidden">
+                <div class="back-btn" onclick="showSectionsList()">← Back to Classes</div>
+
+                <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+                    <h3>Create New Class</h3>
+                    <form id="sectionForm">
+                        <div class="form-group">
+                            <label>Department</label>
+                            <select id="sectionDeptSelect" onchange="checkNewDept(this)" required></select>
+                        </div>
+
+                        <div id="quickDeptGroup" class="form-group hidden">
+                            <label>New Department Name</label>
+                            <input type="text" id="quickDeptName" placeholder="e.g. Mechanical">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Subject Name</label>
+                            <input type="text" id="newSectionName" placeholder="e.g. Distributed Computing" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Section</label>
+                            <input type="text" id="newSectionCode" placeholder="e.g. Section A" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Year</label>
+                            <input type="text" id="newSectionYear" placeholder="e.g. 3rd year" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Academic Year</label>
+                            <input type="text" id="newSectionDuration" placeholder="e.g. 2025-26" required>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Create Class & Start Managing</button>
+                    </form>
+                    <p id="sectionFormError" style="color: var(--danger); margin-top: 1rem; font-size: 0.85rem;"
+                        class="hidden"></p>
+                </div>
+            </div>
+
+            <!-- Section Tools View -->
+            <div id="sectionToolsView" class="hidden">
+                <div class="back-btn" onclick="showSectionsList()">← Back to Sections</div>
+                <h2 id="activeSectionTitle">Section Name</h2>
+                <p id="activeSectionDetails" style="color: var(--text-muted); margin-bottom: 2rem;"></p>
+
+                <nav class="nav-tabs">
+                    <button id="tab-attendanceList" class="tab-btn active"
+                        onclick="switchSectionTab('attendanceList')">Attendance Logs</button>
+                    <button id="tab-registerStudent" class="tab-btn"
+                        onclick="switchSectionTab('registerStudent')">Register Students</button>
+                    <button id="tab-studentsList" class="tab-btn" onclick="switchSectionTab('studentsList')">Student
+                        Details</button>
+                </nav>
+
+                <div id="sectionTabContent">
+                    <div id="attendanceListTab">
+                        <div class="glass-card" style="margin-bottom: 2rem;">
+                            <h3>Attendance Performance Overview</h3>
+                            <div style="position: relative; height: 320px; width: 100%;">
+                                <canvas id="attendanceStatsChart"></canvas>
+                                <div id="chartNoDataPlaceholder" class="hidden"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); border-radius: 12px; pointer-events: none;">
+                                    <p style="color: var(--text-muted);">No attendance data available yet.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3 style="margin: 0;">Attendance History</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">Select a date to view or
+                                    download records</p>
+                            </div>
+                            <div id="attendanceGroupsContainer"
+                                style="display: flex; flex-direction: column; gap: 1rem;">
+                                <!-- Date groups will be injected here as buttons -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="studentsListTab" class="hidden">
+                        <div class="glass-card">
+                            <h3>Students</h3>
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Reg No</th>
+                                            <th>Email</th>
+                                            <th>Attendance %</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentsTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="registerStudentTab" class="hidden">
+                        <!-- Existing Registration Form -->
+                        <div id="registerFormContainer" class="glass-card">
+                            <h3>Register New Student</h3>
+                            <form id="registerForm">
+                                <div class="registration-grid">
+                                    <div class="form-group"><label>Full Name</label><input type="text" id="regName"
+                                            required></div>
+                                    <div class="form-group"><label>Reg No</label><input type="text" id="regNo" required>
+                                    </div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="regEmail"
+                                            required></div>
+                                    <div class="form-group"><label>RFID ID</label><input type="text" id="regRfid"
+                                            placeholder="e.g. RFID_123" required></div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Capture Student Photo</label>
+                                        <div id="cameraContainer"
+                                            style="position: relative; width: 100%; height: 500px; background: #000; border-radius: 24px; overflow: hidden; margin-bottom: 1.5rem; border: 2px solid var(--border);">
+                                            <video id="regVideo" autoplay playsinline
+                                                style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                            <canvas id="faceOverlay"
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+                                            <div id="captureOverlay"
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10;">
+                                                <div style="font-size: 3rem; margin-bottom: 1rem;">📸</div>
+                                                <button type="button" class="btn"
+                                                    style="padding: 1rem 2rem; font-size: 1.1rem;"
+                                                    onclick="startCamera()">Initialize Registration Camera</button>
+                                            </div>
+                                            <img id="capturePreview" class="hidden"
+                                                style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+                                        </div>
+                                        <div id="cameraControls" class="hidden" style="display: flex; gap: 1rem;">
+                                            <button type="button" class="btn"
+                                                style="flex: 2; background: var(--secondary); height: 50px; font-size: 1.1rem;"
+                                                onclick="capturePhoto()">Capture Face</button>
+                                            <button type="button" id="retakeBtn" class="btn btn-outline hidden"
+                                                style="flex: 1;" onclick="resetCamera()">Retake</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" id="regBtn" class="btn"
+                                    style="width: 100%; margin-top: 1rem;">Register Student</button>
+                            </form>
+                            <p id="regError" style="color: var(--danger); text-align: center; margin-top: 1rem;"
+                                class="hidden"></p>
+                            <p id="regSuccess" style="color: var(--success); text-align: center; margin-top: 1rem;"
+                                class="hidden"></p>
+                        </div>
+
+                        <!-- Edit Form Container (Hidden by default) -->
+                        <div id="editFormContainer" class="glass-card hidden">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3 style="margin: 0;">Edit Student Details</h3>
+                                <button class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+                            </div>
+                            <form id="editForm">
+                                <input type="hidden" id="editStudentId">
+                                <div class="registration-grid">
+                                    <div class="form-group"><label>Full Name</label><input type="text" id="editName"
+                                            required></div>
+                                    <div class="form-group"><label>Reg No</label><input type="text" id="editNo"
+                                            required></div>
+                                    <div class="form-group"><label>Email</label><input type="email" id="editEmail"
+                                            required></div>
+                                    <div class="form-group"><label>RFID ID</label><input type="text" id="editRfid"
+                                            required></div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Capture New Photo (Optional - skip to keep current)</label>
+                                        <div id="editCameraContainer"
+                                            style="position: relative; width: 100%; height: 400px; background: #000; border-radius: 20px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border);">
+                                            <video id="editVideo" autoplay playsinline
+                                                style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                            <div id="editCaptureOverlay"
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.6);">
+                                                <button type="button" class="btn" onclick="startEditCamera()">Open
+                                                    Update Camera</button>
+                                            </div>
+                                            <img id="editCapturePreview" class="hidden"
+                                                style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+                                        </div>
+                                        <div id="editCameraControls" class="hidden" style="display: flex; gap: 1rem;">
+                                            <button type="button" class="btn" style="flex: 2;"
+                                                onclick="captureEditPhoto()">Capture New Face</button>
+                                            <button type="button" id="editRetakeBtn" class="btn btn-outline hidden"
+                                                style="flex: 1;" onclick="resetEditCamera()">Retake</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" id="updateBtn" class="btn"
+                                    style="width: 100%; margin-top: 1rem;">Save Changes</button>
+                            </form>
+                            <p id="editError" style="color: var(--danger); text-align: center; margin-top: 1rem;"
+                                class="hidden"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Live Session View -->
+            <div id="liveSessionTab" class="hidden">
+                <div class="feed-status" id="feedStatusIndicator">
+                    <div class="feed-dot connecting" id="statusDot"></div>
+                    <span id="statusText">Connecting to live feed...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="margin: 0;">Mark Attendance</h2>
+                    <button class="btn"
+                        style="background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);"
+                        onclick="submitSessionAttendance()">Finalize & Submit Session</button>
+                </div>
+
+                <div class="grid">
+                    <!-- Automated Version -->
+                    <div class="glass-card">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div id="automationStatusDot"
+                                    style="width: 10px; height: 10px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); transition: background 0.3s;">
+                                </div>
+                                <h3 style="margin: 0;">Automated Live Feed</h3>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.7rem;">
+                                <span id="automationLabel"
+                                    style="font-size: 0.8rem; color: var(--success); font-weight: 600;">Automation
+                                    ON</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="masterAutomationToggle" checked
+                                        onchange="toggleAutomation(this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Verified
+                            detections appear in their respective categories below.</p>
+                        <div id="automationPausedBanner" class="hidden"
+                            style="background: rgba(245,158,11,0.12); border: 1px solid var(--warning); border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1rem; color: var(--warning); font-size: 0.85rem; font-weight: 600; text-align: center;">
+                            ⏸ Automated detection is paused. New scans will NOT be recorded.
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 2rem;">
+                            <!-- Fully Verified -->
+                            <div>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <h4
+                                        style="color: var(--success); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>✅</span> Fully Verified (Face + RFID)
+                                    </h4>
+                                    <label class="switch" style="transform: scale(0.8);">
+                                        <input type="checkbox" id="toggleIncludeFully" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div
+                                    style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                <th>Reg No</th>
+                                                <th>Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="fullyVerifiedTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Only Face Verified -->
+                            <div>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <h4
+                                        style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>👤</span> Only Face Verified
+                                    </h4>
+                                    <label class="switch" style="transform: scale(0.8);">
+                                        <input type="checkbox" id="toggleIncludeFace" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div
+                                    style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                <th>Reg No</th>
+                                                <th>Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="faceOnlyTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Only RFID Verified -->
+                            <div>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <h4
+                                        style="color: var(--secondary); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span>💳</span> Only RFID Verified
+                                    </h4>
+                                    <label class="switch" style="transform: scale(0.8);">
+                                        <input type="checkbox" id="toggleIncludeRfid" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div
+                                    style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                <th>Reg No</th>
+                                                <th>Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="rfidOnlyTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Version -->
+                    <div class="glass-card">
+                        <h3>Manual Attendance</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Toggle
+                            attendance manually for each student. This overrides automation.</p>
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Student Details</th>
+                                        <th>Attendance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manualAttendanceTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student View -->
+    <div id="studentDashboard" class="hidden">
+        <h2 style="margin-bottom: 2rem;">My Attendance Overview</h2>
+
+        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+            <!-- Overall percentage visualization -->
+            <div class="glass-card stat-card">
+                <h3>Overall Attendance</h3>
+                <div class="stat-val"><span id="attendancePercent">0</span>%</div>
+                <canvas id="percentageChart"></canvas>
+            </div>
+
+            <!-- Subject-wise Table -->
+            <div class="glass-card">
+                <h3>Subject-wise Attendance</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th style="text-align: center;">Attendance</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentSubjectTableBody">
+                            <!-- Subject rows loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance History Modal (Hidden by default) -->
+        <div id="attendanceHistoryModal" class="hidden"
+            style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+            <div class="glass-card"
+                style="max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative;">
+                <button onclick="closeHistoryModal()"
+                    style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+                <h3 id="historyModalTitle">Subject History</h3>
+                <p id="historyModalStats" style="margin-bottom: 2rem; color: var(--text-muted);"></p>
+
+                <div id="historyGrid"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 0.5rem;">
+                    <!-- Dates loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Attendance Log Modal -->
+        <div id="studentAttendanceLogModal" class="hidden"
+            style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1001; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
+            <div class="glass-card"
+                style="max-width: 750px; width: 95%; max-height: 85vh; overflow-y: auto; position: relative;">
+                <button onclick="closeStudentLogModal()"
+                    style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+                <h3 id="studentLogModalTitle">Attendance Log</h3>
+                <p id="studentLogModalSubtitle"
+                    style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.85rem;"></p>
+                <div id="studentLogContent">
+                    <p style="color: var(--text-muted); text-align: center;">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Edit Time Slots Modal -->
+    <div id="editTimeSlotsModal" class="hidden"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1005; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
+        <div class="glass-card"
+            style="max-width: 650px; width: 95%; max-height: 85vh; overflow-y: auto; position: relative;">
+            <button onclick="closeEditTimeSlotsModal()"
+                style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <h3 style="margin-top: 0;">Customize Timetable Headers</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Edit existing durations or
+                append a new class. They will be sorted automatically.</p>
+
+            <div id="timeSlotsList" style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 2.5rem;">
+                <!-- Time slots dynamically injected here -->
+            </div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <h4 style="margin-top: 0; color: var(--primary);">Add New Class Duration</h4>
+                <form id="addTimeSlotForm" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
+                    <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                        <label>Duration Label (e.g. 5:00 - 5:55)</label>
+                        <input type="text" id="newSlotLabel" required>
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Start Hour (24h format)</label>
+                        <input type="number" id="newSlotHour" min="0" max="23" placeholder="e.g. 17" required>
+                    </div>
+                    <button type="submit" class="btn" style="background: var(--success);">Append Class</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const API_URL = location.origin.includes('127.0.0.1') || location.origin.includes('localhost')
+            ? 'http://127.0.0.1:8000'
+            : location.origin;
+
+        let token = localStorage.getItem('token');
+        let userRole = localStorage.getItem('role');
+        let activeSection = null;
+        let selectedLoginRole = 'faculty';
+        let currentStudentsData = [];
+
+        function viewEmbedding(studentId) {
+            const student = currentStudentsData.find(s => s.id === studentId);
+            if (student && student.face_embedding) {
+                alert("Face Embedding Vector:\n\n" + student.face_embedding);
+            } else {
+                alert("No face embedding found.");
+            }
+        }
+
+        // --- View Management ---
+        function setLoginRole(role) {
+            selectedLoginRole = role;
+            document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('active'));
+            if (role === 'faculty') {
+                document.getElementById('roleFaculty').classList.add('active');
+                document.getElementById('usernameLabel').innerText = 'Faculty Email';
+                document.getElementById('username').placeholder = 'faculty@school.com';
+                document.getElementById('toggleText').classList.remove('hidden');
+            } else {
+                document.getElementById('roleStudent').classList.add('active');
+                document.getElementById('usernameLabel').innerText = 'Registration Number / Email';
+                document.getElementById('username').placeholder = 'e.g. 21BCE001';
+                document.getElementById('toggleText').classList.add('hidden');
+            }
+        }
+
+        function showView(viewId) {
+            ['loginView', 'facultyDashboard', 'studentDashboard'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+            if (viewId !== 'loginView') {
+                document.getElementById('userInfo').classList.remove('hidden');
+                fetchUserProfile();
+                // Only faculty can forget/delete their account
+                const forgetBtn = document.getElementById('forgetAccountBtn');
+                if (userRole === 'faculty') {
+                    forgetBtn.classList.remove('hidden');
+                } else {
+                    forgetBtn.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('userInfo').classList.add('hidden');
+            }
+        }
+
+        async function fetchUserProfile() {
+            if (!token) return;
+            try {
+                const res = await fetch(API_URL + '/user/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (res.ok) {
+                    const user = data.user;
+                    document.getElementById('headerName').innerText = user.name || 'Admin';
+                    document.getElementById('headerEmail').innerText = user.email;
+                    document.getElementById('headerRFID').innerText = user.rfid_id || user.reg_no || 'N/A';
+                }
+            } catch (err) { console.error("Profile fetch error", err); }
+        }
+
+        function showSectionsList() {
+            showFacultyView('classes');
+        }
+
+        function showFacultyView(view) {
+            document.getElementById('sectionsListView').classList.add('hidden');
+            document.getElementById('timetableView').classList.add('hidden');
+            document.getElementById('liveSessionTab').classList.add('hidden');
+            document.getElementById('sectionToolsView').classList.add('hidden');
+            document.getElementById('createSectionView').classList.add('hidden');
+
+            document.querySelectorAll('#facultyDashboard > nav .tab-btn').forEach(b => b.classList.remove('active'));
+
+            if (view === 'classes') {
+                document.getElementById('sectionsListView').classList.remove('hidden');
+                document.getElementById('tab-classes').classList.add('active');
+                loadSections();
+            } else if (view === 'timetable') {
+                document.getElementById('timetableView').classList.remove('hidden');
+                document.getElementById('tab-timetable').classList.add('active');
+                loadSectionsForTimetable();
+                loadTimetable();
+            } else if (view === 'live') {
+                document.getElementById('liveSessionTab').classList.remove('hidden');
+                document.getElementById('tab-liveGlobal').classList.add('active');
+                initLiveSession();
+            }
+        }
+
+        function showCreateSection() {
+            document.getElementById('sectionsListView').classList.add('hidden');
+            document.getElementById('createSectionView').classList.remove('hidden');
+            loadDepartments();
+        }
+
+        function openSection(section) {
+            activeSection = section;
+            document.getElementById('sectionsListView').classList.add('hidden');
+            document.getElementById('sectionToolsView').classList.remove('hidden');
+            document.getElementById('activeSectionTitle').innerText = section.name;
+            document.getElementById('activeSectionDetails').innerText = `${section.dept_name} | Year: ${section.year}`;
+            switchSectionTab('attendanceList');
+        }
+
+        function switchSectionTab(tab) {
+            ['attendanceListTab', 'studentsListTab', 'registerStudentTab'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(tab + 'Tab').classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            if (tab === 'attendanceList') fetchAttendance(activeSection.id);
+            if (tab === 'studentsList') fetchStudents(activeSection.id);
+        }
+
+        // --- Live Session & Manual Attendance ---
+        let livePollInterval = null;
+
+        function setFeedStatus(state, text) {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            if (!dot || !statusText) return;
+            dot.className = 'feed-dot ' + state;
+            statusText.innerText = text;
+        }
+
+        let globalLiveSection = null;
+
+        async function initLiveSession() {
+            if (livePollInterval) { clearInterval(livePollInterval); livePollInterval = null; }
+
+
+            // First, check what the current live section is based on timetable
+            try {
+                const res = await fetch(`${API_URL}/attendance/current_live_section`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!data.section_id) {
+                    document.getElementById('statusText').innerText = "No class scheduled right now according to Timetable.";
+                    document.getElementById('statusDot').className = 'feed-dot disconnected';
+                    document.querySelector('#liveSessionTab .grid').classList.add('hidden');
+                    return;
+                }
+
+                globalLiveSection = data;
+                document.querySelector('#liveSessionTab .grid').classList.remove('hidden');
+                document.getElementById('statusText').innerText = `Active Session: ${data.subject_name} (${data.section_code})`;
+            } catch (err) {
+                console.error("Error fetching live section", err);
+                return;
+            }
+
+            setFeedStatus('connected', `Live feed active for ${globalLiveSection.subject_name} (Polling mode)`);
+
+            // Replace WebSocket with Polling
+            livePollInterval = setInterval(async () => {
+                if (!token || !globalLiveSection) {
+                    clearInterval(livePollInterval);
+                    return;
+                }
+                try {
+                    const notifyRes = await fetch(`${API_URL}/attendance/notifications`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (notifyRes.ok) {
+                        fetchPendingRecords();
+                    }
+                } catch (err) {
+                    console.error("Polling error", err);
+                }
+            }, 2000); // Poll every 2 seconds
+
+
+            fetchPendingRecords();
+            loadManualAttendanceList();
+        }
+
+        let automationEnabled = true;
+
+        function toggleAutomation(enabled) {
+            automationEnabled = enabled;
+            const dot = document.getElementById('automationStatusDot');
+            const label = document.getElementById('automationLabel');
+            const banner = document.getElementById('automationPausedBanner');
+            if (enabled) {
+                dot.style.background = 'var(--success)';
+                dot.style.boxShadow = '0 0 10px var(--success)';
+                label.style.color = 'var(--success)';
+                label.innerText = 'Automation ON';
+                banner.classList.add('hidden');
+                fetchPendingRecords();
+            } else {
+                dot.style.background = 'var(--warning)';
+                dot.style.boxShadow = '0 0 10px var(--warning)';
+                label.style.color = 'var(--warning)';
+                label.innerText = 'Automation OFF';
+                banner.classList.remove('hidden');
+            }
+        }
+
+        let toggleSkipList = new Set(); // To prevent race conditions in UI
+        async function fetchPendingRecords() {
+            if (!globalLiveSection) return;
+            if (!automationEnabled) return; // Don't update display when automation is off
+            const res = await fetch(`${API_URL}/attendance/pending/${globalLiveSection.section_id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const records = await res.json();
+
+            // Categorize automated records
+            const automated = records.filter(r => !r.is_manual);
+
+            const fully = automated.filter(r => r.status === 'Fully Verified');
+            const faceOnly = automated.filter(r => r.status === 'Only Face Verified');
+            const rfidOnly = automated.filter(r => r.status === 'Only RFID Verified');
+
+            const renderRows = (recs) => recs.map(r => `
+                <tr>
+                    <td>${r.student_name}</td>
+                    <td>${r.reg_no}</td>
+                    <td style="font-size: 0.75rem;">${new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No records</td></tr>';
+
+            document.getElementById('fullyVerifiedTableBody').innerHTML = renderRows(fully);
+            document.getElementById('faceOnlyTableBody').innerHTML = renderRows(faceOnly);
+            document.getElementById('rfidOnlyTableBody').innerHTML = renderRows(rfidOnly);
+
+            // Re-sync manual list toggles safely, skipping those recently interacted with
+            const pendingIds = records.map(r => r.student_id);
+            document.querySelectorAll('.manual-toggle').forEach(chk => {
+                const sid = parseInt(chk.dataset.studentId);
+                if (!toggleSkipList.has(sid)) {
+                    chk.checked = pendingIds.includes(sid);
+                }
+            });
+        }
+
+        async function loadManualAttendanceList() {
+            if (!globalLiveSection) return;
+
+            const [sRes, pRes] = await Promise.all([
+                fetch(`${API_URL}/students?section_id=${globalLiveSection.section_id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${API_URL}/attendance/pending/${globalLiveSection.section_id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            ]);
+
+            const students = await sRes.json();
+            const pending = await pRes.json();
+            const pendingIds = pending.map(p => p.student_id);
+
+            const tbody = document.getElementById('manualAttendanceTableBody');
+            tbody.innerHTML = students.map(s => `
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">${s.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${s.reg_no}</div>
+                    </td>
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" class="manual-toggle" data-student-id="${s.id}" ${pendingIds.includes(s.id) ? 'checked' : ''} onchange="toggleStudentAttendance(${s.id}, this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="2">No students registered</td></tr>';
+        }
+
+        async function toggleStudentAttendance(studentId, isChecked) {
+            toggleSkipList.add(studentId);
+            try {
+                const fd = new FormData();
+                fd.append('student_id', studentId);
+                fd.append('section_id', globalLiveSection.section_id);
+                fd.append('status', isChecked);
+
+                const res = await fetch(`${API_URL}/attendance/manual_toggle`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    alert("Error: " + (data.detail || "Failed to update attendance"));
+                    // Revert UI if failed
+                    document.querySelector(`.manual-toggle[data-student-id="${studentId}"]`).checked = !isChecked;
+                }
+            } catch (err) {
+                alert("Network error updating attendance");
+                document.querySelector(`.manual-toggle[data-student-id="${studentId}"]`).checked = !isChecked;
+            } finally {
+                // Keep in skip list for 1 more second to allow server reflection
+                setTimeout(() => toggleSkipList.delete(studentId), 1000);
+                setTimeout(fetchPendingRecords, 500);
+            }
+        }
+
+        async function submitSessionAttendance() {
+            if (!globalLiveSection) return;
+            if (!confirm("Are you sure you want to finalize and submit attendance for this session?")) return;
+
+            const includedStatuses = [];
+            if (document.getElementById('toggleIncludeFully').checked) includedStatuses.push('Fully Verified');
+            if (document.getElementById('toggleIncludeFace').checked) includedStatuses.push('Only Face Verified');
+            if (document.getElementById('toggleIncludeRfid').checked) includedStatuses.push('Only RFID Verified');
+            includedStatuses.push('Verified (Manual)'); // Always include manual
+
+            const res = await fetch(`${API_URL}/attendance/submit/${globalLiveSection.section_id}?statuses=${encodeURIComponent(includedStatuses.join(','))}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                alert("Attendance submitted successfully!");
+                document.querySelector('#liveSessionTab .grid').classList.add('hidden');
+                document.getElementById('wsStatusText').innerText = "Session Submitted.";
+            } else {
+                const data = await res.json();
+                alert("Error: " + (data.detail || "Submission failed"));
+            }
+        }
+
+        // --- Timetable Management ---
+        let timeSlots = JSON.parse(localStorage.getItem('timeSlots')) || [
+            { id: 't1', label: "9:00 - 9:55", starth: 9 },
+            { id: 't2', label: "10:00 - 10:55", starth: 10 },
+            { id: 't3', label: "11:00 - 11:55", starth: 11 },
+            { id: 't4', label: "12:00 - 12:55", starth: 12 },
+            { id: 't5', label: "1:00 - 1:55", starth: 13 },
+            { id: 't6', label: "2:00 - 2:55", starth: 14 },
+            { id: 't7', label: "3:00 - 3:55", starth: 15 },
+            { id: 't8', label: "4:00 - 4:55", starth: 16 }
+        ];
+
+        async function loadSectionsForTimetable() {
+            const res = await fetch(API_URL + '/all_sections', { headers: { 'Authorization': `Bearer ${token}` } });
+            const sections = await res.json();
+            document.getElementById('ttSectionSelect').innerHTML = '<option value="">Select a Class...</option>' + sections.map(s => `
+                <option value="${s.id}">${s.name} (${s.section})</option>
+            `).join('');
+        }
+
+        async function loadTimetable() {
+            const res = await fetch(API_URL + '/timetable', { headers: { 'Authorization': `Bearer ${token}` } });
+            const timetable = await res.json();
+
+            // Generate Grid - include all days from Monday to Saturday by default, 
+            // plus any day that actually has an entry (like Sunday)
+            const standardDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const uniqueEntryDays = [...new Set(timetable.map(t => t.day_of_week))];
+            
+            // combine and preserve order
+            const daysToShow = [...standardDays];
+            uniqueEntryDays.forEach(d => {
+                if (!daysToShow.includes(d)) daysToShow.push(d);
+            });
+
+            let html = `
+            <style>
+                .tt-grid { width: 100%; border-collapse: separate; border-spacing: 2px; }
+                .tt-grid th { background: rgba(99, 102, 241, 0.1); color: var(--text-muted); padding: 0.8rem 0.5rem; text-align: center; font-size: 0.8rem; border-radius: 6px; font-weight: 600; }
+                .tt-grid td { background: rgba(0, 0, 0, 0.2); height: 80px; text-align: center; vertical-align: middle; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); position: relative;}
+                .tt-day { background: rgba(99, 102, 241, 0.1) !important; color: var(--primary); font-weight: 600; width: 100px; }
+                .tt-cell-filled { background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(56, 189, 248, 0.1)); border: 1px solid var(--primary); cursor: pointer; transition: all 0.2s;}
+                .tt-cell-filled:hover { transform: scale(1.02); z-index: 10; box-shadow: 0 4px 12px rgba(99,102,241,0.2); }
+                .dl-btn { position: absolute; top: 4px; right: 4px; font-size: 0.7rem; background: rgba(239, 68, 68, 0.2); color: var(--danger); border: none; border-radius: 4px; cursor: pointer; display: none; padding: 2px 5px;}
+                .tt-cell-filled:hover .dl-btn { display: block; }
+            </style>
+            <table class="tt-grid">
+                <thead><tr><th>Day</th>`;
+
+            timeSlots.forEach(slot => { html += `<th>${slot.label}</th>`; });
+            html += `</tr></thead><tbody>`;
+
+            daysToShow.forEach(day => {
+                html += `<tr><td class="tt-day">${day}</td>`;
+
+                const dayEntries = timetable.filter(t => t.day_of_week === day);
+
+                timeSlots.forEach(slot => {
+                    const matchingEntry = dayEntries.find(t => {
+                        if (!t.start_time) return false;
+                        const hr = parseInt(t.start_time.split(":")[0], 10);
+                        return hr === slot.starth;
+                    });
+
+                    if (matchingEntry) {
+                        html += `
+                            <td class="tt-cell-filled">
+                                <button class="dl-btn" onclick="deleteTimetableEntry(${matchingEntry.id})">✖</button>
+                                <div style="font-weight: 600; font-size: 0.85rem; color: #fff;">${matchingEntry.subject_name}</div>
+                                <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">${matchingEntry.section_code}</div>
+                                <div style="margin-top: 4px; display: flex; gap: 4px; justify-content: center;">
+                                    <button onclick="promptEditTime(${matchingEntry.id}, '${matchingEntry.start_time}', '${matchingEntry.end_time}')" 
+                                            style="background: none; border: none; cursor: pointer; font-size: 0.7rem; color: var(--primary);">✏️ Edit Time</button>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                });
+
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('timetableGridContainer').innerHTML = html;
+        }
+
+        // Add event listener to form (setup once)
+        function initTimetableManagement() {
+            const form = document.getElementById('timetableForm');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const section_id = document.getElementById('ttSectionSelect').value;
+                    const day_of_week = document.getElementById('ttDaySelect').value;
+                    const start_time = document.getElementById('ttStartTime').value;
+                    const end_time = document.getElementById('ttEndTime').value;
+
+                    if (!section_id) { alert("Please select a class"); return; }
+
+                    const fd = new FormData();
+                    fd.append('section_id', section_id);
+                    fd.append('day_of_week', day_of_week);
+                    fd.append('start_time', start_time);
+                    fd.append('end_time', end_time);
+
+                    const res = await fetch(API_URL + '/timetable', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: fd
+                    });
+                    if (res.ok) {
+                        alert("Timetable entry added!");
+                        form.reset();
+                        loadTimetable();
+                    } else {
+                        const data = await res.json();
+                        alert(data.detail || "Error adding entry");
+                    }
+                });
+            }
+        }
+
+        async function deleteTimetableEntry(id) {
+            if (!confirm("Delete this timetable entry?")) return;
+            const res = await fetch(API_URL + '/timetable/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                loadTimetable();
+            } else {
+                alert("Failed to delete entry");
+            }
+        }
+
+        async function promptEditTime(id, currentStart, currentEnd) {
+            const newStart = prompt("Enter new Start Time (HH:MM):", currentStart);
+            if (newStart === null) return;
+            const newEnd = prompt("Enter new End Time (HH:MM):", currentEnd);
+            if (newEnd === null) return;
+
+            const fd = new FormData();
+            fd.append('start_time', newStart);
+            fd.append('end_time', newEnd);
+
+            const res = await fetch(`${API_URL}/timetable/${id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: fd
+            });
+
+            if (res.ok) {
+                alert("Timetable updated!");
+                loadTimetable();
+            } else {
+                const data = await res.json();
+                alert(data.detail || "Update failed");
+            }
+        }
+
+        async function downloadTimetable() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+
+            const res = await fetch(API_URL + '/timetable', { headers: { 'Authorization': `Bearer ${token}` } });
+            const timetableRes = await res.json();
+
+            const standardDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const uniqueEntryDays = [...new Set(timetableRes.map(t => t.day_of_week))];
+            const daysToShow = [...standardDays];
+            uniqueEntryDays.forEach(d => {
+                if (!daysToShow.includes(d)) daysToShow.push(d);
+            });
+
+            const tableHeaders = ['Day', ...timeSlots.map(s => s.label)];
+            const tableData = [];
+
+            daysToShow.forEach(day => {
+                const row = [day];
+                const dayEntries = timetableRes.filter(t => t.day_of_week === day);
+                timeSlots.forEach(slot => {
+                    const entry = dayEntries.find(t => {
+                        if (!t.start_time) return false;
+                        const hr = parseInt(t.start_time.split(":")[0], 10);
+                        return hr === slot.starth;
+                    });
+                    row.push(entry ? `${entry.subject_name}\n(${entry.section_code})` : '');
+                });
+                tableData.push(row);
+            });
+
+            doc.text(`${userRole.toUpperCase()} Timetable`, 14, 15);
+            doc.autoTable({
+                head: [tableHeaders],
+                body: tableData,
+                startY: 20,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+                headStyles: { fillColor: [99, 102, 241], textColor: 255 }
+            });
+
+            doc.save("my_timetable.pdf");
+        }
+
+        function editTimeSlots() {
+            document.getElementById('editTimeSlotsModal').classList.remove('hidden');
+            renderTimeSlotsModal();
+        }
+
+        function closeEditTimeSlotsModal() {
+            document.getElementById('editTimeSlotsModal').classList.add('hidden');
+        }
+
+        function renderTimeSlotsModal() {
+            const list = document.getElementById('timeSlotsList');
+            if (timeSlots.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No custom times defined.</p>';
+                return;
+            }
+
+            list.innerHTML = timeSlots.map((slot, index) => `
+                <div style="display: flex; gap: 1rem; align-items: center; background: rgba(0,0,0,0.2); padding: 0.5rem 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="flex: 2;">
+                        <input type="text" id="ts_label_${index}" value="${slot.label}" style="width: 100%; padding: 0.4rem; font-size: 0.9rem;" placeholder="Label">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="number" id="ts_hour_${index}" value="${slot.starth}" min="0" max="23" style="width: 100%; padding: 0.4rem; font-size: 0.9rem;" placeholder="Start Hr (24h)">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" style="padding: 0.4rem; font-size: 0.8rem;" onclick="updateTimeSlot(${index})">Update</button>
+                        <button class="trash-btn" style="padding: 0.4rem 0.6rem;" onclick="deleteTimeSlotRow(${index})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateTimeSlot(index) {
+            const labelInput = document.getElementById(`ts_label_${index}`).value;
+            const hourInput = document.getElementById(`ts_hour_${index}`).value;
+
+            if (!labelInput) { alert("Label cannot be empty."); return; }
+            if (hourInput === '') { alert("Start hour cannot be empty."); return; }
+
+            timeSlots[index].label = labelInput;
+            timeSlots[index].starth = parseInt(hourInput, 10);
+            timeSlots.sort((a, b) => a.starth - b.starth);
+            localStorage.setItem('timeSlots', JSON.stringify(timeSlots));
+            loadTimetable();
+            renderTimeSlotsModal();
+        }
+
+        function deleteTimeSlotRow(index) {
+            if (confirm(`Remove the class duration "${timeSlots[index].label}"?`)) {
+                timeSlots.splice(index, 1);
+                localStorage.setItem('timeSlots', JSON.stringify(timeSlots));
+                loadTimetable();
+                renderTimeSlotsModal();
+            }
+        }
+
+        // Initialize listener when script compiles
+        const addTimeSlotForm = document.getElementById('addTimeSlotForm');
+        if (addTimeSlotForm) {
+            addTimeSlotForm.onsubmit = (e) => {
+                e.preventDefault();
+                const label = document.getElementById('newSlotLabel').value;
+                const hour = parseInt(document.getElementById('newSlotHour').value, 10);
+
+                timeSlots.push({ id: 't' + Date.now(), label: label, starth: hour });
+                timeSlots.sort((a, b) => a.starth - b.starth);
+                localStorage.setItem('timeSlots', JSON.stringify(timeSlots));
+
+                e.target.reset();
+                loadTimetable();
+                renderTimeSlotsModal();
+            };
+        }
+
+        function resetTimeSlots() {
+            if (confirm("Reset timetable columns to default (9 AM - 4 PM) settings?")) {
+                localStorage.removeItem('timeSlots');
+                timeSlots = [
+                    { id: 't1', label: "9:00 - 9:55", starth: 9 },
+                    { id: 't2', label: "10:00 - 10:55", starth: 10 },
+                    { id: 't3', label: "11:00 - 11:55", starth: 11 },
+                    { id: 't4', label: "12:00 - 12:55", starth: 12 },
+                    { id: 't5', label: "1:00 - 1:55", starth: 13 },
+                    { id: 't6', label: "2:00 - 2:55", starth: 14 },
+                    { id: 't7', label: "3:00 - 3:55", starth: 15 },
+                    { id: 't8', label: "4:00 - 4:55", starth: 16 }
+                ];
+                loadTimetable();
+            }
+        }
+
+        async function removeStudent(studentId) {
+            if (!confirm("Remove this student and all their attendance data?")) return;
+            const res = await fetch(`${API_URL}/students/${studentId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchStudents(activeSection.id);
+        }
+
+        async function removeSection(sectionId) {
+            if (!confirm("Delete this section, all its students, and reports?")) return;
+            const res = await fetch(`${API_URL}/sections/${sectionId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) showSectionsList();
+        }
+
+        async function forgetAccount() {
+            if (!confirm("DANGER: This will PERMANENTLY delete your faculty account. Continue?")) return;
+            const res = await fetch(`${API_URL}/faculty/forget`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) { alert("Account deleted."); logout(); }
+        }
+
+        // --- Auth ---
+        let isSignupMode = false;
+        function toggleSignup(e) {
+            if (e) e.preventDefault();
+            isSignupMode = !isSignupMode;
+
+            document.getElementById('loginTitle').innerText = isSignupMode ? 'Faculty Signup' : 'Access Portal';
+            document.getElementById('submitBtn').innerText = isSignupMode ? 'Create Account' : 'Sign In';
+            document.getElementById('loginRoleSelector').style.display = isSignupMode ? 'none' : 'flex';
+
+            if (isSignupMode) {
+                document.getElementById('usernameLabel').innerText = 'Email';
+                document.getElementById('username').placeholder = 'your@email.com';
+                document.getElementById('facultyNameGroup').classList.remove('hidden');
+                document.getElementById('facultyName').setAttribute('required', 'true');
+                document.getElementById('facultyRFIDGroup').classList.remove('hidden');
+                document.getElementById('facultyRfid').setAttribute('required', 'true');
+            } else {
+                setLoginRole(selectedLoginRole);
+                document.getElementById('facultyNameGroup').classList.add('hidden');
+                document.getElementById('facultyName').removeAttribute('required');
+                document.getElementById('facultyRFIDGroup').classList.add('hidden');
+                document.getElementById('facultyRfid').removeAttribute('required');
+            }
+
+            document.getElementById('toggleText').innerHTML = isSignupMode ?
+                'Already have an account? <a href="#" onclick="toggleSignup(event)">Sign In</a>' :
+                'Faculty without an account? <a href="#" onclick="toggleSignup(event)">Sign Up</a>';
+        }
+
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            if (isSignupMode) {
+                const formData = new FormData();
+                formData.append('name', document.getElementById('facultyName').value);
+                formData.append('email', document.getElementById('username').value);
+                formData.append('password', document.getElementById('password').value);
+                formData.append('rfid_id', document.getElementById('facultyRfid').value);
+                try {
+                    const res = await fetch(API_URL + '/signup_faculty', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (res.ok) { alert(data.message); toggleSignup(); }
+                    else showError(data.detail);
+                } catch { showError('Server error'); }
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+
+            try {
+                const res = await fetch(API_URL + '/login', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok) {
+                    token = data.access_token;
+                    userRole = data.role;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('role', userRole);
+                    initApp(true);
+                } else showError(data.detail);
+            } catch { showError('Server error'); }
+        };
+
+        function logout() { localStorage.clear(); location.reload(); }
+        function showError(msg) { const e = document.getElementById('loginError'); e.innerText = msg; e.classList.remove('hidden'); }
+
+        // --- Data Loading ---
+        async function loadSections() {
+            const res = await fetch(API_URL + '/all_sections', { headers: { 'Authorization': `Bearer ${token}` } });
+            const sections = await res.json();
+            const grid = document.getElementById('sectionsGrid');
+            grid.innerHTML = sections.map(s => {
+                const sectionDisplay = s.section ? `(${s.section})` : '';
+                return `
+                <div class="section-card" onclick='openSection(${JSON.stringify(s)})'>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3>${s.name} ${sectionDisplay}</h3>
+                        <button class="trash-btn" onclick="event.stopPropagation(); removeSection(${s.id})">🗑️</button>
+                    </div>
+                    <p>${s.dept_name || 'No Dept'}</p>
+                    <span class="year-badge">${s.year}</span>
+                    <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);">🗓️ Academic Year: ${s.academic_duration}</p>
+                </div>
+            `;
+            }).join('') || '<div style="text-align:center; width:100%; color:var(--text-muted); padding:3rem;">No classes yet. Create your first one!</div>';
+        }
+
+        async function loadDepartments() {
+            try {
+                const res = await fetch(API_URL + '/departments');
+                const depts = await res.json();
+                const select = document.getElementById('sectionDeptSelect');
+                let html = '<option value="" disabled selected>Select Department</option>';
+                html += depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+                html += '<option value="NEW_DEPT" style="font-weight: 600; color: var(--primary);">+ Add New Department...</option>';
+                select.innerHTML = html;
+            } catch (err) {
+                console.error("Failed to load departments", err);
+            }
+        }
+
+        function checkNewDept(select) {
+            const quickDeptGroup = document.getElementById('quickDeptGroup');
+            if (select.value === 'NEW_DEPT') {
+                quickDeptGroup.classList.remove('hidden');
+                document.getElementById('quickDeptName').setAttribute('required', 'true');
+            } else {
+                quickDeptGroup.classList.add('hidden');
+                document.getElementById('quickDeptName').removeAttribute('required');
+            }
+        }
+
+        document.getElementById('sectionForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('sectionFormError');
+            errorEl.classList.add('hidden');
+
+            let deptId = document.getElementById('sectionDeptSelect').value;
+
+            // Handle new department creation first if needed
+            if (deptId === 'NEW_DEPT') {
+                const deptName = document.getElementById('quickDeptName').value;
+                const fd = new FormData();
+                fd.append('name', deptName);
+                const dres = await fetch(API_URL + '/departments', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+                if (!dres.ok) {
+                    const data = await dres.json();
+                    errorEl.innerText = "Dept Error: " + (data.detail || "Failed to create department");
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+                // Refresh depts to get the new ID (simplified: just fetch depts again)
+                const depts = await (await fetch(API_URL + '/departments')).json();
+                const newDept = depts.find(d => d.name === deptName);
+                deptId = newDept.id;
+            }
+
+            const fd = new FormData();
+            fd.append('name', document.getElementById('newSectionName').value);
+            fd.append('section', document.getElementById('newSectionCode').value);
+            fd.append('year', document.getElementById('newSectionYear').value);
+            fd.append('department_id', deptId);
+            fd.append('academic_duration', document.getElementById('newSectionDuration').value);
+
+            try {
+                const res = await fetch(API_URL + '/sections', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Class created successfully!');
+                    document.getElementById('sectionForm').reset();
+                    document.getElementById('quickDeptGroup').classList.add('hidden');
+                    showSectionsList();
+                } else {
+                    errorEl.innerText = data.detail || "Failed to create class";
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.innerText = "Connection error";
+                errorEl.classList.remove('hidden');
+            }
+        };
+
+        async function fetchAttendance(sectionId = null) {
+            let url = API_URL + '/attendance';
+            if (sectionId) url += `?section_id=${sectionId}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (userRole === 'faculty') {
+                // Group by Date for cleaner logs
+                const grouped = data.records.reduce((acc, r) => {
+                    const date = new Date(r.timestamp).toLocaleDateString(undefined, {
+                        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                    });
+                    if (!acc[date]) acc[date] = [];
+                    acc[date].push(r);
+                    return acc;
+                }, {});
+
+                if (data.stats) renderStatsChart(data.stats);
+
+                const container = document.getElementById('attendanceGroupsContainer');
+                container.innerHTML = '';
+
+                if (Object.keys(grouped).length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No attendance records found.</p>';
+                    return;
+                }
+
+                for (const [date, records] of Object.entries(grouped)) {
+                    const dateId = 'date-' + date.replace(/[^a-zA-Z0-9]/g, '');
+                    const groupEl = document.createElement('div');
+                    groupEl.style.cssText = "border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.02);";
+
+                    groupEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(99, 102, 241, 0.05);">
+                            <div style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; flex: 1;" onclick="toggleDateDetail('${dateId}')">
+                                <span style="font-size: 1.1rem;">📅</span>
+                                <span style="font-weight: 600;">${date}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">(${records.length} Swipes)</span>
+                            </div>
+                            <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="downloadCSV('${date}', ${JSON.stringify(records).replace(/'/g, "&apos;")})">
+                                📥 Download CSV
+                            </button>
+                        </div>
+                        <div id="${dateId}" class="hidden" style="padding: 1rem; border-top: 1px solid var(--border);">
+                            <div style="overflow-x: auto;">
+                                <table style="margin-top: 0;">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Reg No</th>
+                                            <th>Time</th>
+                                            <th style="text-align: center;">Face</th>
+                                            <th style="text-align: center;">RFID</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${records.map(r => `
+                                            <tr>
+                                                <td>${r.student_name}</td>
+                                                <td style="font-size: 0.8rem; color: var(--text-muted);">${r.reg_no || 'N/A'}</td>
+                                                <td style="font-size: 0.8rem;">${new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                                                <td style="text-align: center;">${r.is_manual ? 'Manual' : (r.face_verified ? '✅' : '❌')}</td>
+                                                <td style="text-align: center;">${r.is_manual ? 'Manual' : (r.rfid_verified ? '✅' : '❌')}</td>
+                                                <td><span class="status-pill status-${r.status.toLowerCase().replace(/ /g, '')}" style="font-size: 0.7rem;">${r.status}</span></td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(groupEl);
+                }
+            } else {
+                document.getElementById('attendancePercent').innerText = Math.round(data.percentage);
+                updateChart(data.percentage);
+
+                // Render Subject-wise Table
+                const tableBody = document.getElementById('studentSubjectTableBody');
+                if (data.subject_stats) {
+                    tableBody.innerHTML = data.subject_stats.map((s, idx) => {
+                        const percent = s.total_sessions > 0 ? Math.round((s.present_sessions / s.total_sessions) * 100) : 0;
+                        let statusClass = 'status-danger';
+                        if (percent >= 80) statusClass = 'status-success';
+                        else if (percent >= 70) statusClass = 'status-warning';
+
+                        return `
+                            <tr>
+                                <td style="font-weight: 500;">${s.subject_name}</td>
+                                <td style="text-align: center;">
+                                    <span class="status-pill ${statusClass}">${percent}%</span>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">${s.present_sessions}/${s.total_sessions} Sessions</div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick='showAttendanceHistory(${JSON.stringify(s).replace(/'/g, "&apos;")})'>
+                                        🔍 Check Attendance
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        function showAttendanceHistory(subject) {
+            const modal = document.getElementById('attendanceHistoryModal');
+            const title = document.getElementById('historyModalTitle');
+            const stats = document.getElementById('historyModalStats');
+            const grid = document.getElementById('historyGrid');
+
+            title.innerText = subject.subject_name;
+            stats.innerText = `${subject.present_sessions} Present / ${subject.total_sessions} Total Sessions`;
+
+            grid.innerHTML = (subject.history || []).map(day => {
+                const isPresent = day.status === 'P';
+                const color = isPresent ? '#10b981' : '#ef4444';
+                const bg = isPresent ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
+                return `
+                    <div style="background: ${bg}; border: 1px solid ${color}; border-radius: 8px; padding: 0.5rem; text-align: center;">
+                        <div style="font-size: 0.6rem; color: var(--text-muted); margin-bottom: 0.2rem;">${new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                        <div style="font-weight: bold; color: ${color};">${day.status}</div>
+                    </div>
+                `;
+            }).join('') || '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No history available.</p>';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('attendanceHistoryModal').classList.add('hidden');
+        }
+
+        async function fetchStudents(sectionId) {
+            const res = await fetch(API_URL + '/students?section_id=' + sectionId, { headers: { 'Authorization': `Bearer ${token}` } });
+            const students = await res.json();
+            currentStudentsData = students;
+            document.getElementById('studentsTableBody').innerHTML = students.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.reg_no}</td>
+                    <td>${s.email}</td>
+                    <td style="min-width: 150px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
+                                <div style="width: ${s.attendance_percentage}%; height: 100%; background: ${s.attendance_percentage >= 75 ? 'var(--success)' : 'var(--danger)'};"></div>
+                            </div>
+                            <span style="font-weight: 600; font-size: 0.85rem; ${s.attendance_percentage < 75 ? 'color: var(--danger);' : ''}">${s.attendance_percentage}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="viewStudentAttendanceLog(${s.id}, '${s.name.replace(/'/g, '')}')">📋 View Log</button>
+                            <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick='editStudent(${JSON.stringify(s)})'>✏️ Edit</button>
+                            ${s.face_embedding ? `<button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="viewEmbedding(${s.id})">👁️ Embedding</button>` : ''}
+                            <button class="trash-btn" onclick="removeStudent(${s.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="5">No students</td></tr>';
+        }
+
+        async function viewStudentAttendanceLog(studentId, studentName) {
+            const modal = document.getElementById('studentAttendanceLogModal');
+            const title = document.getElementById('studentLogModalTitle');
+            const subtitle = document.getElementById('studentLogModalSubtitle');
+            const content = document.getElementById('studentLogContent');
+
+            title.innerText = `📋 Attendance Log — ${studentName}`;
+            subtitle.innerText = 'Session-wise attendance history across all enrolled subjects.';
+            content.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Loading...</p>';
+            modal.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/students/${studentId}/attendance_log`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const subjects = await res.json();
+
+                if (!subjects.length) {
+                    content.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No session records found.</p>';
+                    return;
+                }
+
+                content.innerHTML = subjects.map(subj => {
+                    const percent = subj.total > 0 ? Math.round((subj.present / subj.total) * 100) : 0;
+                    const pColor = percent >= 75 ? 'var(--success)' : 'var(--danger)';
+                    const rows = subj.sessions.length ? subj.sessions.map(sess => {
+                        const isPresent = sess.status === 'Present';
+                        return `<tr>
+                            <td>${new Date(sess.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${sess.session_time}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${sess.subject_name}</td>
+                            <td><span class="status-pill" style="background: ${isPresent ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isPresent ? 'var(--success)' : 'var(--danger)'}; border: 1px solid ${isPresent ? 'var(--success)' : 'var(--danger)'};">${isPresent ? '✅ Present' : '❌ Absent'}</span></td>
+                        </tr>`;
+                    }).join('') : `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No sessions recorded yet.</td></tr>`;
+
+                    return `
+                    <div style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 1rem;">${subj.subject_name} <span style="color: var(--text-muted); font-weight: 400; font-size: 0.85rem;">(${subj.section_code})</span></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${subj.present}/${subj.total} sessions present</div>
+                            </div>
+                            <span style="font-size: 1.3rem; font-weight: 800; color: ${pColor};">${percent}%</span>
+                        </div>
+                        <div style="overflow-x:auto; border-radius: 10px; border: 1px solid var(--border);">
+                            <table style="margin: 0; width:100%;">
+                                <thead><tr><th>Date</th><th>Session Time</th><th>Subject</th><th>Status</th></tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                }).join('<hr style="border-color: var(--border); margin: 1.5rem 0;">');
+            } catch (err) {
+                content.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load attendance log.</p>`;
+            }
+        }
+
+        function closeStudentLogModal() {
+            document.getElementById('studentAttendanceLogModal').classList.add('hidden');
+        }
+
+        // --- Student Editing Logic ---
+        function editStudent(student) {
+            switchSectionTab('registerStudent');
+            document.getElementById('registerFormContainer').classList.add('hidden');
+            document.getElementById('editFormContainer').classList.remove('hidden');
+
+            document.getElementById('editStudentId').value = student.id;
+            document.getElementById('editName').value = student.name;
+            document.getElementById('editNo').value = student.reg_no;
+            document.getElementById('editEmail').value = student.email;
+            document.getElementById('editRfid').value = student.rfid_id || '';
+        }
+
+        function cancelEdit() {
+            document.getElementById('registerFormContainer').classList.remove('hidden');
+            document.getElementById('editFormContainer').classList.add('hidden');
+            resetEditCamera();
+            stopCamera(); // Safety call
+        }
+
+        let editCapturedBlob = null;
+        async function startEditCamera() {
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const video = document.getElementById('editVideo');
+                video.srcObject = s;
+                stream = s; // Reuse global stream variable for consistency
+                document.getElementById('editCaptureOverlay').classList.add('hidden');
+                document.getElementById('editCameraControls').classList.remove('hidden');
+            } catch (err) { alert("Camera access denied."); }
+        }
+
+        function captureEditPhoto() {
+            const video = document.getElementById('editVideo');
+            const preview = document.getElementById('editCapturePreview');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob((blob) => {
+                editCapturedBlob = blob;
+                preview.src = URL.createObjectURL(blob);
+                preview.classList.remove('hidden');
+                video.classList.add('hidden');
+                document.getElementById('editRetakeBtn').classList.remove('hidden');
+                stopCamera();
+            }, 'image/jpeg');
+        }
+
+        function resetEditCamera() {
+            editCapturedBlob = null;
+            document.getElementById('editCapturePreview').classList.add('hidden');
+            document.getElementById('editVideo').classList.remove('hidden');
+            document.getElementById('editRetakeBtn').classList.add('hidden');
+            document.getElementById('editCaptureOverlay').classList.remove('hidden');
+            document.getElementById('editCameraControls').classList.add('hidden');
+            stopCamera();
+        }
+
+        document.getElementById('editForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const sid = document.getElementById('editStudentId').value;
+            const btn = document.getElementById('updateBtn');
+            btn.disabled = true;
+            btn.innerText = 'Updating...';
+
+            const fd = new FormData();
+            fd.append('name', document.getElementById('editName').value);
+            fd.append('reg_no', document.getElementById('editNo').value);
+            fd.append('email', document.getElementById('editEmail').value);
+            fd.append('rfid_id', document.getElementById('editRfid').value);
+            if (editCapturedBlob) fd.append('photo', editCapturedBlob, 'update.jpg');
+
+            try {
+                const res = await fetch(`${API_URL}/students/${sid}/update`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+                if (res.ok) {
+                    alert('Student updated successfully!');
+                    cancelEdit();
+                    fetchStudents(activeSection.id);
+                } else {
+                    const data = await res.json();
+                    alert("Error: " + (data.detail || "Update failed"));
+                }
+            } catch { alert("Connection error"); }
+            finally { btn.disabled = false; btn.innerText = 'Save Changes'; }
+        }
+
+        // --- Webcam Logic ---
+        let capturedBlob = null;
+        let stream = null;
+        let detectInterval = null;
+
+        async function initFaceDetection() {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            ]);
+        }
+
+        async function startCamera() {
+            try {
+                if (!window.faceapiLoaded) {
+                    const btn = event.target;
+                    const originalText = btn.innerText;
+                    btn.innerText = "Loading AI Models...";
+                    await initFaceDetection();
+                    window.faceapiLoaded = true;
+                    btn.innerText = originalText;
+                }
+
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280, height: 720 } });
+                const video = document.getElementById('regVideo');
+                video.srcObject = stream;
+                document.getElementById('captureOverlay').classList.add('hidden');
+                document.getElementById('cameraControls').classList.remove('hidden');
+
+                // Start active face tracking
+                const canvas = document.getElementById('faceOverlay');
+                video.onloadedmetadata = () => {
+                    const displaySize = { width: video.clientWidth, height: video.clientHeight };
+                    faceapi.matchDimensions(canvas, displaySize);
+
+                    detectInterval = setInterval(async () => {
+                        if (!stream) return;
+                        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+                        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                        faceapi.draw.drawDetections(canvas, resizedDetections);
+                    }, 150);
+                };
+
+            } catch (err) {
+                console.error(err);
+                alert("Camera access denied or models failed to load.");
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (detectInterval) {
+                clearInterval(detectInterval);
+                detectInterval = null;
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('regVideo');
+            const preview = document.getElementById('capturePreview');
+            const retakeBtn = document.getElementById('retakeBtn');
+            const canvas = document.createElement('canvas');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            canvas.toBlob((blob) => {
+                capturedBlob = blob;
+                preview.src = URL.createObjectURL(blob);
+                preview.classList.remove('hidden');
+                video.classList.add('hidden');
+                document.getElementById('faceOverlay').classList.add('hidden');
+                retakeBtn.classList.remove('hidden');
+                stopCamera(); // Turn off camera once captured
+            }, 'image/jpeg', 0.95);
+        }
+
+        function resetCamera() {
+            capturedBlob = null;
+            document.getElementById('capturePreview').classList.add('hidden');
+            document.getElementById('regVideo').classList.remove('hidden');
+            document.getElementById('faceOverlay').classList.remove('hidden');
+            document.getElementById('retakeBtn').classList.add('hidden');
+            startCamera();
+        }
+
+        document.getElementById('registerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('regBtn');
+            const errEl = document.getElementById('regError');
+            const succEl = document.getElementById('regSuccess');
+
+            errEl.classList.add('hidden');
+            succEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerText = 'Processing Biometrics...';
+
+            if (!capturedBlob) {
+                errEl.innerText = "Please capture a student photo first";
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = 'Register Student';
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append('name', document.getElementById('regName').value);
+            fd.append('reg_no', document.getElementById('regNo').value);
+            fd.append('email', document.getElementById('regEmail').value);
+            fd.append('rfid_id', document.getElementById('regRfid').value);
+            fd.append('photo', capturedBlob, 'capture.jpg');
+            fd.append('section_id', activeSection.id);
+            fd.append('department_id', activeSection.department_id);
+            fd.append('year', activeSection.year);
+
+            try {
+                const res = await fetch(API_URL + '/register_student', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    succEl.innerText = data.message;
+                    succEl.classList.remove('hidden');
+                    document.getElementById('registerForm').reset();
+
+                    // Ensure UI is cleared and reset to initial state
+                    capturedBlob = null;
+                    document.getElementById('capturePreview').classList.add('hidden');
+                    document.getElementById('regVideo').classList.remove('hidden');
+                    document.getElementById('faceOverlay').classList.remove('hidden');
+                    document.getElementById('retakeBtn').classList.add('hidden');
+                    document.getElementById('captureOverlay').classList.remove('hidden');
+                    document.getElementById('cameraControls').classList.add('hidden');
+
+                    stopCamera(); // STOP CAMERA AFTER REGISTERING
+                    setTimeout(() => { switchSectionTab('studentsList'); }, 1500);
+                } else {
+                    let msg = data.detail;
+                    if (Array.isArray(msg)) msg = msg.map(e => e.msg).join(", ");
+                    errEl.innerText = "Error: " + (msg || "Registration failed");
+                    errEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errEl.innerText = "Connection error: Server is unreachable";
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Register Student';
+            }
+        };
+
+        function takeAttendance() { alert("Use the IoT Simulator or ESP32 Device to sync attendance in real-time."); }
+
+        function updateChart(percent) {
+            const ctx = document.getElementById('percentageChart').getContext('2d');
+            if (window.chartInst) window.chartInst.destroy();
+            window.chartInst = new Chart(ctx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [percent, 100 - percent], backgroundColor: ['#6366f1', '#1e293b'], borderWidth: 0, circumference: 180, rotation: 270 }] },
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
+            });
+        }
+
+        function toggleDateDetail(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+
+        function downloadCSV(date, records) {
+            const headers = ["Student Name", "Registration No", "Timestamp", "Face Verified", "RFID Verified", "Status", "Manual"];
+            const rows = records.map(r => [
+                r.student_name,
+                r.reg_no || 'N/A',
+                new Date(r.timestamp).toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }),
+                r.face_verified ? "Yes" : "No",
+                r.rfid_verified ? "Yes" : "No",
+                r.status,
+                r.is_manual ? "Yes" : "No"
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + headers.join(",") + "\n"
+                + rows.map(e => e.join(",")).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `attendance_${activeSection.name}_${date.replace(/ /g, '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        let statsChart = null;
+        function renderStatsChart(stats) {
+            const canvas = document.getElementById('attendanceStatsChart');
+            const placeholder = document.getElementById('chartNoDataPlaceholder');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            // Show placeholder if all stats are zero
+            const hasData = stats && (stats.gt90 > 0 || stats.gt80 > 0 || stats.lt80 > 0 || stats.lt75 > 0);
+            if (!hasData) {
+                placeholder.classList.remove('hidden');
+                if (statsChart) { statsChart.destroy(); statsChart = null; }
+                return;
+            } else {
+                placeholder.classList.add('hidden');
+            }
+
+            if (statsChart) statsChart.destroy();
+
+            statsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['> 90%', '> 80%', '< 80%', '< 75%'],
+                    datasets: [{
+                        label: 'Students',
+                        data: [stats.gt90, stats.gt80, stats.lt80, stats.lt75],
+                        backgroundColor: [
+                            '#10b981', // 90+ Green
+                            '#6366f1', // 80+ Primary
+                            '#f59e0b', // <80 Warning
+                            '#ef4444'  // <75 Danger
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) { return ` ${context.raw} Students`; }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#9ca3af', precision: 0 }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initApp(isFreshLogin = false) {
+            // If it's a fresh login, go straight to dashboard
+            if (isFreshLogin && token) {
+                if (userRole === 'faculty') {
+                    showView('facultyDashboard');
+                    showSectionsList();
+                    initTimetableManagement();
+                } else {
+                    showView('studentDashboard');
+                    fetchAttendance();
+                }
+                return;
+            }
+
+            // Otherwise, always show login page first (clean start or page load)
+            showView('loginView');
+        }
+
+        initApp();
+    </script>
+</body>
+
+</html>
